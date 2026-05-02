@@ -1,0 +1,54 @@
+{
+  "name": "Chinese Toy Phone",
+  "author": "nubbybubby",
+  "version": "1.0.0",
+  "keywords": ["pebble-app"],
+  "private": true,
+  "dependencies": {},
+  "pebble": {
+    "displayName": "Toy Phone",
+    "uuid": "2e950f43-b1a1-401a-a107-621f03e5fd07",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "emery",
+      "flint"
+    ],
+    "watchapp": {
+      "watchface": false
+    },
+    "messageKeys": [
+      "dummy"
+    ],
+    "resources": {
+      "media": [        
+        {
+          "type": "raw",
+          "name": "PCM_DATA_PART1",
+          "file": "audio/toyphone_part1.raw"
+        },
+        {
+          "type": "raw",
+          "name": "PCM_DATA_PART2",
+          "file": "audio/toyphone_part2.raw"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_ICON",
+          "file": "images/icon.png",
+          "menuIcon": true
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_PHONE_BW",
+          "file": "images/toyphone_bw.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_PHONE_COLOR",
+          "file": "images/toyphone_color.png"
+        }
+      ]
+    }
+  }
+}
