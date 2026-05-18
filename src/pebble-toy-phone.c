@@ -170,6 +170,9 @@ static void start_playback(void) {
   app_timer_register(50, vibrate_callback, NULL);
 
   if (play_count == 2) {
+  #if defined(PBL_PLATFORM_EMERY)
+  srand(time(NULL));
+  #endif
     s_light_show_timer = app_timer_register(2600, light_show_callback, NULL);
   }
 
