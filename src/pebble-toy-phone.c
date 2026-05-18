@@ -30,8 +30,7 @@ static bool bl_toggle;
 #endif
 
 // Resource playback state
-static ResHandle s_res_handle_1;
-static ResHandle s_res_handle_2;
+static ResHandle s_res_handle;
 static size_t s_res_size;
 static size_t s_res_offset;
 
@@ -40,6 +39,11 @@ static uint8_t s_buffer[SAMPLES_PER_CHUNK];
 
 static uint8_t volume;
 static uint8_t play_count;
+
+typedef enum {
+  PART_1 = RESOURCE_ID_PCM_DATA_PART1,
+  PART_2 = RESOURCE_ID_PCM_DATA_PART2
+} PCM_DATA;
 
 static const uint32_t segments[] = {
     400, 
@@ -97,18 +101,14 @@ static bool fill_stream(void) {
     }
 
     size_t to_read = (remaining < BYTES_PER_CHUNK) ? remaining : BYTES_PER_CHUNK;
-    if (play_count == 1) {
-        resource_load_byte_range(s_res_handle_1, s_res_offset, s_buffer, to_read);
-    } else if (play_count == 2) {
-        resource_load_byte_range(s_res_handle_2, s_res_offset, s_buffer, to_read);
-    }
+    resource_load_byte_range(s_res_handle, s_res_offset, s_buffer, to_read);
     
     uint32_t written = speaker_stream_write(s_buffer, to_read);
     s_res_offset += written;
 
     if (written < to_read) {
       return false;
-    }
+    } 
   }
 }
 
@@ -160,20 +160,18 @@ static void start_playback(void) {
   }
   
   play_count++;
-  
-  s_res_handle_1 = resource_get_handle(RESOURCE_ID_PCM_DATA_PART1);
-  s_res_handle_2 = resource_get_handle(RESOURCE_ID_PCM_DATA_PART2);
-  
+  s_res_offset = 0;
+ 
+  PCM_DATA pcm_data_handle;
+
+  s_res_handle = resource_get_handle(pcm_data_handle = play_count);
+  s_res_size = resource_size(s_res_handle);
+
   app_timer_register(50, vibrate_callback, NULL);
 
-  if (play_count == 1) {
-    s_res_size = resource_size(s_res_handle_1);
-  } else if (play_count == 2) {
+  if (play_count == 2) {
     s_light_show_timer = app_timer_register(2600, light_show_callback, NULL);
-    s_res_size = resource_size(s_res_handle_2);
   }
-
-  s_res_offset = 0;
 
   if (s_res_size == 0) {
     APP_LOG(APP_LOG_LEVEL_ERROR, "toy phone pcm resource is empty");
