@@ -155,7 +155,13 @@ static void light_show_callback(void *data) {
   bl_toggle = !bl_toggle;
   light_enable(bl_toggle);
   #elif defined(PBL_PLATFORM_EMERY)
-  light_set_color(GColorFromRGB(rand() % 4 * 85, rand() % 4 * 85, rand() % 4 * 85));
+  uint8_t r = rand() % (255 - 25 + 1) + 25;
+  uint8_t g = rand() % (255 - 25 + 1) + 25;
+  uint8_t b = rand() % (255 - 25 + 1) + 25;
+
+  uint32_t rgb888 = (r << 16) | (g << 8) | b;
+  light_set_color_rgb888(rgb888);
+
   light_enable_interaction();
   #endif
 
