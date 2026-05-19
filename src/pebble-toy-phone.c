@@ -58,7 +58,7 @@ VibePattern pat = {
   .num_segments = ARRAY_LENGTH(segments),
 };
 
-static void start_playback(void);
+static void start_toy_phone(void);
 
 #if defined(PBL_TOUCH)
 static void touch_handler(const TouchEvent *event, void *context) {
@@ -67,14 +67,14 @@ static void touch_handler(const TouchEvent *event, void *context) {
     case TouchEvent_PositionUpdate:
       break;
     case TouchEvent_Liftoff:
-      start_playback();
+      start_toy_phone();
       break;
   }
 }
 #endif
 
 static void prv_select_click_handler(ClickRecognizerRef recognizer, void *context) {
-  start_playback();
+  start_toy_phone();
 }
 
 static void prv_up_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -193,7 +193,7 @@ static void cancel_timers(void) {
   }
 }
 
-static void start_playback(void) {
+static void start_toy_phone(void) {
   for (int i = 0; i < SAMPLES_PER_CHUNK; i++) {
     s_buffer[i] = 0;
   }
