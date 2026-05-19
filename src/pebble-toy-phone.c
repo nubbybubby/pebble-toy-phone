@@ -22,7 +22,9 @@ static GBitmap *phone_bitmap;
 
 // State
 static AppTimer *s_timer;
+static AppTimer *s_stop_timer;
 static AppTimer *s_light_show_timer;
+static AppTimer *s_vibrate_timer;
 static bool s_playing;
 
 #if defined(PBL_PLATFORM_FLINT)
@@ -114,20 +116,27 @@ static bool fill_stream(void) {
 
 static void stop_callback(void *data) {
   s_playing = false;
+
   #if defined(PBL_PLATFORM_EMERY)
   light_set_system_color();
-  #endif
   if (play_count > 1) {
     light_enable(false);
   }
+  #elif defined(PBL_PLATFORM_FLINT)
+  light_enable(false);
+  #endif
+
+  speaker_stream_close();
+  speaker_stop();
 }
 
 static void timer_callback(void *data) {
   if (!s_playing) return;
 
   if (fill_stream()) {
-    app_timer_register(1500, stop_callback, NULL);
-    speaker_stream_close();
+    if (!s_stop_timer) {
+      s_stop_timer = app_timer_register(1500, stop_callback, NULL);
+    }
     return;
   }
 
@@ -142,7 +151,7 @@ static void light_show_callback(void *data) {
   light_enable(bl_toggle);
   #elif defined(PBL_PLATFORM_EMERY)
   light_set_color(GColorFromRGB(rand() % 4 * 85, rand() % 4 * 85, rand() % 4 * 85));
-  light_enable(true);
+  light_enable_interaction();
   #endif
 
   s_light_show_timer = app_timer_register(200, light_show_callback, NULL);
@@ -152,12 +161,40 @@ static void vibrate_callback(void *data) {
   vibes_enqueue_custom_pattern(pat);
 }
 
+static void cancel_timers(void) {
+  if (s_timer) {
+    app_timer_cancel(s_timer);
+    s_timer = NULL;
+  }
+
+  if (s_stop_timer) {
+    app_timer_cancel(s_stop_timer);
+    s_stop_timer = NULL;
+  }
+
+  if (s_vibrate_timer) {
+    vibes_cancel();
+    app_timer_cancel(s_vibrate_timer);
+    s_vibrate_timer = NULL;
+  }
+
+  if (s_light_show_timer) {
+    app_timer_cancel(s_light_show_timer);
+    s_light_show_timer = NULL;
+  }
+}
+
 static void start_playback(void) {
-  if (s_playing) return;
+  for (int i = 0; i < SAMPLES_PER_CHUNK; i++) {
+    s_buffer[i] = 0;
+  }
 
   if (play_count >= 2) {
     play_count = 0;
   }
+  
+  cancel_timers();
+  stop_callback(NULL);
   
   play_count++;
   s_res_offset = 0;
@@ -167,7 +204,7 @@ static void start_playback(void) {
   s_res_handle = resource_get_handle(pcm_data_handle = play_count);
   s_res_size = resource_size(s_res_handle);
 
-  app_timer_register(50, vibrate_callback, NULL);
+  s_vibrate_timer = app_timer_register(50, vibrate_callback, NULL);
 
   if (play_count == 2) {
   #if defined(PBL_PLATFORM_EMERY)
