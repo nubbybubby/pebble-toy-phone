@@ -126,6 +126,7 @@ static void stop_callback(void *data) {
   light_enable(false);
   #endif
 
+  s_stop_timer = NULL;
   speaker_stream_close();
   speaker_stop();
 }
@@ -140,11 +141,15 @@ static void timer_callback(void *data) {
     return;
   }
 
+  s_timer = NULL;
   s_timer = app_timer_register(TIMER_MS, timer_callback, NULL);
 }
 
 static void light_show_callback(void *data) {
-  if (!s_playing || play_count < 2) return;
+  if (!s_playing || play_count < 2) {
+    s_light_show_timer = NULL;
+    return;
+  }
 
   #if defined(PBL_PLATFORM_FLINT)
   bl_toggle = !bl_toggle;
@@ -163,7 +168,6 @@ static void vibrate_callback(void *data) {
 
 static void cancel_timers(void) {
   if (s_timer) {
-    app_timer_cancel(s_timer);
     s_timer = NULL;
   }
 
@@ -174,7 +178,6 @@ static void cancel_timers(void) {
 
   if (s_vibrate_timer) {
     vibes_cancel();
-    app_timer_cancel(s_vibrate_timer);
     s_vibrate_timer = NULL;
   }
 
@@ -204,13 +207,17 @@ static void start_playback(void) {
   s_res_handle = resource_get_handle(pcm_data_handle = play_count);
   s_res_size = resource_size(s_res_handle);
 
-  s_vibrate_timer = app_timer_register(50, vibrate_callback, NULL);
-
+  if (!s_vibrate_timer) {
+    s_vibrate_timer = app_timer_register(50, vibrate_callback, NULL);
+  }
+  
   if (play_count == 2) {
   #if defined(PBL_PLATFORM_EMERY)
   srand(time(NULL));
   #endif
-    s_light_show_timer = app_timer_register(2600, light_show_callback, NULL);
+    if (!s_light_show_timer) {
+      s_light_show_timer = app_timer_register(2600, light_show_callback, NULL);
+    }
   }
 
   if (s_res_size == 0) {
@@ -227,7 +234,9 @@ static void start_playback(void) {
 
   s_playing = true;
   fill_stream();
-  s_timer = app_timer_register(TIMER_MS, timer_callback, NULL);
+  if (!s_timer) {
+    s_timer = app_timer_register(TIMER_MS, timer_callback, NULL);
+  }
 }
 
 static void prv_window_load(Window *window) {
