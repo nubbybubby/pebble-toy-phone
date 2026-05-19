@@ -245,7 +245,13 @@ static void prv_window_load(Window *window) {
 static void prv_window_unload(Window *window) {
   s_playing = false;
   speaker_stream_close();
-  persist_write_int(1, volume);
+  if (persist_exists(1)) {
+    if (volume != persist_read_int(1)) {
+        persist_write_int(1, volume);
+    }
+  } else {
+    persist_write_int(1, volume);
+  }
 }
 
 static void prv_init(void) {
