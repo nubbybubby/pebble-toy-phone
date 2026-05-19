@@ -194,10 +194,6 @@ static void cancel_timers(void) {
 }
 
 static void start_toy_phone(void) {
-  for (int i = 0; i < SAMPLES_PER_CHUNK; i++) {
-    s_buffer[i] = 0;
-  }
-
   if (play_count >= 2) {
     play_count = 0;
   }
