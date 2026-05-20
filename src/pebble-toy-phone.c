@@ -131,16 +131,19 @@ static void stop_callback(void *data) {
 }
 
 static void timer_callback(void *data) {
-  if (!s_playing) return;
+  if (!s_playing) {
+    s_timer = NULL;
+    return;
+  }
 
   if (fill_stream()) {
     if (!s_stop_timer) {
       s_stop_timer = app_timer_register(1500, stop_callback, NULL);
     }
+    s_timer = NULL;
     return;
   }
 
-  s_timer = NULL;
   s_timer = app_timer_register(TIMER_MS, timer_callback, NULL);
 }
 
@@ -167,6 +170,7 @@ static void vibrate_callback(void *data) {
 
 static void cancel_timers(void) {
   if (s_timer) {
+    app_timer_cancel(s_timer);
     s_timer = NULL;
   }
 
@@ -230,9 +234,7 @@ static void start_toy_phone(void) {
 
   s_playing = true;
   fill_stream();
-  if (!s_timer) {
-    s_timer = app_timer_register(TIMER_MS, timer_callback, NULL);
-  }
+  s_timer = app_timer_register(TIMER_MS, timer_callback, NULL);
 }
 
 static void prv_window_load(Window *window) {
