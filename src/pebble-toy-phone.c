@@ -155,13 +155,7 @@ static void light_show_callback(void *data) {
   bl_toggle = !bl_toggle;
   light_enable(bl_toggle);
   #elif defined(PBL_PLATFORM_EMERY)
-  uint8_t r = rand() % (255 - 25 + 1) + 25;
-  uint8_t g = rand() % (255 - 25 + 1) + 25;
-  uint8_t b = rand() % (255 - 25 + 1) + 25;
-
-  uint32_t rgb888 = (r << 16) | (g << 8) | b;
-  light_set_color_rgb888(rgb888);
-
+  light_set_color(GColorFromRGB(rand() % 4 * 85, rand() % 4 * 85, rand() % 4 * 85));
   light_enable_interaction();
   #endif
 
@@ -214,9 +208,6 @@ static void start_toy_phone(void) {
   }
   
   if (play_count == 2) {
-  #if defined(PBL_PLATFORM_EMERY)
-  srand(time(NULL));
-  #endif
     if (!s_light_show_timer) {
       s_light_show_timer = app_timer_register(2600, light_show_callback, NULL);
     }
