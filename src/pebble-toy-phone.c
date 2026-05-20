@@ -119,12 +119,11 @@ static void stop_callback(void *data) {
 
   #if defined(PBL_PLATFORM_EMERY)
   light_set_system_color();
+  #endif
+
   if (play_count > 1) {
     light_enable(false);
   }
-  #elif defined(PBL_PLATFORM_FLINT)
-  light_enable(false);
-  #endif
 
   s_stop_timer = NULL;
   speaker_stream_close();
