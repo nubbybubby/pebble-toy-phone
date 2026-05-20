@@ -190,7 +190,11 @@ static void start_toy_phone(void) {
   if (play_count >= 2) {
     play_count = 0;
   }
-  
+ 
+  #if defined(PBL_PLATFORM_FLINT)
+  light_enable(false);
+  #endif
+
   cancel_timers();
   stop_callback(NULL);
   
