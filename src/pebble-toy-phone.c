@@ -119,6 +119,7 @@ static void stop_callback(void *data) {
 
   #if defined(PBL_PLATFORM_EMERY)
   light_set_system_color();
+  bitmap_layer_set_background_color(phone_layer, GColorWhite);
   #endif
 
   if (play_count > 1) {
@@ -157,8 +158,16 @@ static void light_show_callback(void *data) {
   bl_toggle = !bl_toggle;
   light_enable(bl_toggle);
   #elif defined(PBL_PLATFORM_EMERY)
-  light_set_color(GColorFromRGB(rand() % 4 * 85, rand() % 4 * 85, rand() % 4 * 85));
-  light_enable_interaction();
+  GColor random_color = GColorFromRGB(rand() % 4 * 85, rand() % 4 * 85, rand() % 4 * 85);
+  
+  if (light_is_on()) {
+    light_set_color(random_color);
+    light_enable_interaction();
+  } else {
+    /* fallback to changing the background color if the backlight is off */
+    bitmap_layer_set_background_color(phone_layer, random_color);
+  }
+
   #endif
 
   s_light_show_timer = app_timer_register(200, light_show_callback, NULL);
@@ -240,10 +249,11 @@ static void start_toy_phone(void) {
 static void prv_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
- 
+
   phone_bitmap = gbitmap_create_with_resource(PBL_IF_COLOR_ELSE(RESOURCE_ID_IMAGE_PHONE_COLOR, 
                                                                 RESOURCE_ID_IMAGE_PHONE_BW));
   phone_layer = bitmap_layer_create(bounds);
+  bitmap_layer_set_compositing_mode(phone_layer, GCompOpSet);
 
   bitmap_layer_set_bitmap(phone_layer, phone_bitmap);
   layer_add_child(window_layer, bitmap_layer_get_layer(phone_layer));

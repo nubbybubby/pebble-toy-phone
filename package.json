@@ -41,12 +41,14 @@
         {
           "type": "bitmap",
           "name": "IMAGE_PHONE_BW",
-          "file": "images/toyphone_bw.png"
+          "file": "images/toyphone_bw.png",
+          "targetPlatforms": [ "flint" ]
         },
         {
           "type": "bitmap",
           "name": "IMAGE_PHONE_COLOR",
-          "file": "images/toyphone_color.png"
+          "file": "images/toyphone_color.png",
+          "targetPlatforms": [ "emery" ]
         }
       ]
     }
