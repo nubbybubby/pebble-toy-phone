@@ -65,10 +65,10 @@ static void start_toy_phone(void);
 #if defined(PBL_TOUCH)
 static void touch_handler(const TouchEvent *event, void *context) {
   switch (event->type) {
-    case TouchEvent_Touchdown:
+    case TouchEvent_Liftoff:
     case TouchEvent_PositionUpdate:
       break;
-    case TouchEvent_Liftoff:
+    case TouchEvent_Touchdown:
       start_toy_phone();
       break;
   }
