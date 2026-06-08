@@ -1,6 +1,6 @@
 # ay ay ay im your little butterfly ay ay ay im your little butterfly
 
-![Emery](resources/images/toyphone_color.png) ![Flint](resources/images/toyphone_bw.png)
+![Emery](resources/images/toyphone_color_screenshot.png) ![Flint](resources/images/toyphone_bw.png)
 
 ## build instructions
 Install [uv](https://docs.astral.sh/uv/) and run:
