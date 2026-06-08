@@ -26,6 +26,8 @@ static AppTimer *s_stop_timer;
 static AppTimer *s_light_show_timer;
 static AppTimer *s_vibrate_timer;
 static bool s_playing;
+static bool bl_enabled;
+static bool bl_fallback;
 
 #if defined(PBL_PLATFORM_FLINT)
 static bool bl_toggle;
@@ -78,12 +80,20 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *contex
 }
 
 static void prv_up_click_handler(ClickRecognizerRef recognizer, void *context) {
+  if (bl_fallback) {
+    bl_enabled = light_is_on();
+    bl_fallback = !light_is_on();
+  }
   if (volume >= MAX_VOLUME) return;
   volume = volume + 5;
   speaker_set_volume(volume);
 }
 
 static void prv_down_click_handler(ClickRecognizerRef recognizer, void *context) {
+  if (bl_fallback) {
+    bl_enabled = light_is_on();
+    bl_fallback = !light_is_on();
+  }
   if (volume <= MIN_VOLUME) return;
   volume = volume - 5;
   speaker_set_volume(volume);
@@ -120,6 +130,8 @@ static void stop_callback(void *data) {
   #if defined(PBL_PLATFORM_EMERY)
   light_set_system_color();
   bitmap_layer_set_background_color(phone_layer, GColorWhite);
+  #elif defined(PBL_PLATFORM_FLINT)
+  bitmap_layer_set_compositing_mode(phone_layer, GCompOpAssign);
   #endif
 
   if (play_count > 1) {
@@ -156,16 +168,28 @@ static void light_show_callback(void *data) {
 
   #if defined(PBL_PLATFORM_FLINT)
   bl_toggle = !bl_toggle;
-  light_enable(bl_toggle);
+  
+  if (bl_enabled) {
+    bitmap_layer_set_compositing_mode(phone_layer, GCompOpAssign);
+    light_enable(bl_toggle);
+  } else {
+    /* fallback to switching compositing modes if the backlight is off */
+    GCompOp mode = bl_toggle ? GCompOpAssignInverted : GCompOpAssign; 
+    bitmap_layer_set_compositing_mode(phone_layer, mode);
+    bl_enabled = light_is_on();
+  }
+
   #elif defined(PBL_PLATFORM_EMERY)
   GColor random_color = GColorFromRGB(rand() % 4 * 85, rand() % 4 * 85, rand() % 4 * 85);
   
-  if (light_is_on()) {
+  if (bl_enabled) {
+    bitmap_layer_set_background_color(phone_layer, GColorWhite);
     light_set_color(random_color);
     light_enable_interaction();
   } else {
     /* fallback to changing the background color if the backlight is off */
     bitmap_layer_set_background_color(phone_layer, random_color);
+    bl_enabled = light_is_on();
   }
 
   #endif
@@ -227,6 +251,8 @@ static void start_toy_phone(void) {
     if (!s_light_show_timer) {
       s_light_show_timer = app_timer_register(2600, light_show_callback, NULL);
     }
+    bl_enabled = light_is_on();
+    bl_fallback = !light_is_on();
   }
 
   if (s_res_size == 0) {
@@ -253,8 +279,9 @@ static void prv_window_load(Window *window) {
   phone_bitmap = gbitmap_create_with_resource(PBL_IF_COLOR_ELSE(RESOURCE_ID_IMAGE_PHONE_COLOR, 
                                                                 RESOURCE_ID_IMAGE_PHONE_BW));
   phone_layer = bitmap_layer_create(bounds);
-  bitmap_layer_set_compositing_mode(phone_layer, GCompOpSet);
 
+  bitmap_layer_set_compositing_mode(phone_layer, PBL_IF_COLOR_ELSE(GCompOpSet, GCompOpAssign));
+  
   bitmap_layer_set_bitmap(phone_layer, phone_bitmap);
   layer_add_child(window_layer, bitmap_layer_get_layer(phone_layer));
 }
