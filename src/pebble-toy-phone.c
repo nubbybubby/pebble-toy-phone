@@ -105,11 +105,19 @@ static void prv_click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_DOWN, prv_down_click_handler);
 }
 
+static void light_show_callback(void *data);
+
 static bool fill_stream(void) {
   for (;;) {
     size_t remaining = s_res_size - s_res_offset;
     if (remaining == 0) {
       return true;
+    }
+
+    if (remaining < 61800 && play_count == 2) {
+      if (!s_light_show_timer) {
+        light_show_callback(NULL);
+      }
     }
 
     size_t to_read = (remaining < BYTES_PER_CHUNK) ? remaining : BYTES_PER_CHUNK;
@@ -248,9 +256,6 @@ static void start_toy_phone(void) {
   }
   
   if (play_count == 2) {
-    if (!s_light_show_timer) {
-      s_light_show_timer = app_timer_register(2600, light_show_callback, NULL);
-    }
     bl_enabled = light_is_on();
     bl_fallback = !light_is_on();
   }
