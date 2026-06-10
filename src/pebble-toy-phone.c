@@ -25,9 +25,11 @@ static AppTimer *s_timer;
 static AppTimer *s_stop_timer;
 static AppTimer *s_light_show_timer;
 static AppTimer *s_vibrate_timer;
+static size_t remaining;
 static bool s_playing;
 static bool bl_enabled;
 static bool bl_fallback;
+static bool third_click;
 
 #if defined(PBL_PLATFORM_FLINT)
 static bool bl_toggle;
@@ -109,12 +111,12 @@ static void light_show_callback(void *data);
 
 static bool fill_stream(void) {
   for (;;) {
-    size_t remaining = s_res_size - s_res_offset;
+    remaining = s_res_size - s_res_offset;
     if (remaining == 0) {
       return true;
     }
 
-    if (remaining < 61800 && play_count == 2) {
+    if (remaining < 62000 && play_count == 2) {
       if (!s_light_show_timer) {
         light_show_callback(NULL);
       }
@@ -142,7 +144,7 @@ static void stop_callback(void *data) {
   bitmap_layer_set_compositing_mode(phone_layer, GCompOpAssign);
   #endif
 
-  if (play_count > 1) {
+  if (play_count > 1 && remaining == 0) {
     light_enable(false);
   }
 
@@ -206,6 +208,7 @@ static void light_show_callback(void *data) {
 }
 
 static void vibrate_callback(void *data) {
+  if (third_click) return;
   vibes_enqueue_custom_pattern(pat);
 }
 
@@ -232,8 +235,14 @@ static void cancel_timers(void) {
 }
 
 static void start_toy_phone(void) {
-  if (play_count >= 2) {
-    play_count = 0;
+  if (play_count == 2 && remaining > 62000 && !third_click) {
+    third_click = true;
+  } else {
+    third_click = false;
+    if (play_count >= 2) {
+      play_count = 0;
+    }
+    play_count++;
   }
  
   #if defined(PBL_PLATFORM_FLINT)
@@ -243,7 +252,6 @@ static void start_toy_phone(void) {
   cancel_timers();
   stop_callback(NULL);
   
-  play_count++;
   s_res_offset = 0;
  
   PCM_DATA pcm_data_handle;
@@ -251,11 +259,14 @@ static void start_toy_phone(void) {
   s_res_handle = resource_get_handle(pcm_data_handle = play_count);
   s_res_size = resource_size(s_res_handle);
 
-  if (!s_vibrate_timer) {
+  if (!s_vibrate_timer && !third_click) {
     s_vibrate_timer = app_timer_register(50, vibrate_callback, NULL);
   }
   
   if (play_count == 2) {
+    if (third_click) {
+      s_res_offset = 20000; //jump to ay ay ay im your little butterfly
+    }
     bl_enabled = light_is_on();
     bl_fallback = !light_is_on();
   }
@@ -293,6 +304,7 @@ static void prv_window_load(Window *window) {
 
 static void prv_window_unload(Window *window) {
   stop_callback(NULL);
+  vibes_cancel();
   if (persist_exists(1)) {
     if (volume != persist_read_int(1)) {
         persist_write_int(1, volume);
