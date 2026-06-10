@@ -116,7 +116,7 @@ static bool fill_stream(void) {
       return true;
     }
 
-    if (remaining < 62000 && play_count == 2) {
+    if (remaining < 61000 && play_count == 2) {
       if (!s_light_show_timer) {
         light_show_callback(NULL);
       }
@@ -235,7 +235,7 @@ static void cancel_timers(void) {
 }
 
 static void start_toy_phone(void) {
-  if (play_count == 2 && remaining > 62000 && !third_click) {
+  if (play_count == 2 && remaining > 61000 && !third_click) {
     third_click = true;
   } else {
     third_click = false;
