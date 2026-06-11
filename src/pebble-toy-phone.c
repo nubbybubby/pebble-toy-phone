@@ -28,7 +28,6 @@ static AppTimer *s_vibrate_timer;
 static size_t remaining;
 static bool s_playing;
 static bool bl_enabled;
-static bool bl_fallback;
 static bool third_click;
 
 #if defined(PBL_PLATFORM_FLINT)
@@ -82,9 +81,8 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *contex
 }
 
 static void prv_up_click_handler(ClickRecognizerRef recognizer, void *context) {
-  if (bl_fallback) {
+  if (!bl_enabled) {
     bl_enabled = light_is_on();
-    bl_fallback = !light_is_on();
   }
   if (volume >= MAX_VOLUME) return;
   volume = volume + 5;
@@ -92,9 +90,8 @@ static void prv_up_click_handler(ClickRecognizerRef recognizer, void *context) {
 }
 
 static void prv_down_click_handler(ClickRecognizerRef recognizer, void *context) {
-  if (bl_fallback) {
+  if (!bl_enabled) {
     bl_enabled = light_is_on();
-    bl_fallback = !light_is_on();
   }
   if (volume <= MIN_VOLUME) return;
   volume = volume - 5;
@@ -258,7 +255,6 @@ static void start_toy_phone(void) {
       s_res_offset = 20000; //jump to ay ay ay im your little butterfly
     }
     bl_enabled = light_is_on();
-    bl_fallback = !light_is_on();
   }
 
   if (!speaker_stream_open(SpeakerPcmFormat_8kHz_8bit, 0)) {
