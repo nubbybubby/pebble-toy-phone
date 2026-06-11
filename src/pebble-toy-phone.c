@@ -288,8 +288,8 @@ static void prv_window_load(Window *window) {
 }
 
 static void prv_window_unload(Window *window) {
+  cancel_timers();
   stop_callback(NULL);
-  vibes_cancel();
   if (persist_exists(1)) {
     if (volume != persist_read_int(1)) {
         persist_write_int(1, volume);
