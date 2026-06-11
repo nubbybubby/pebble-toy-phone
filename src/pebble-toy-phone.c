@@ -270,7 +270,9 @@ static void start_toy_phone(void) {
 
   s_playing = true;
   fill_stream();
-  s_timer = app_timer_register(TIMER_MS, timer_callback, NULL);
+  if (!s_timer) {
+    s_timer = app_timer_register(TIMER_MS, timer_callback, NULL);
+  }
 }
 
 static void prv_window_load(Window *window) {
