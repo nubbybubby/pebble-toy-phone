@@ -182,14 +182,10 @@ static void light_show_callback(void *data) {
   #if defined(PBL_PLATFORM_FLINT)
   bl_toggle = !bl_toggle;
   
+  GCompOp mode = bl_toggle ? GCompOpAssignInverted : GCompOpAssign; 
+  bitmap_layer_set_compositing_mode(phone_layer, mode);
   if (bl_enabled) {
-    bitmap_layer_set_compositing_mode(phone_layer, GCompOpAssign);
-    light_enable(bl_toggle);
-  } else {
-    /* fallback to switching compositing modes if the backlight is off */
-    GCompOp mode = bl_toggle ? GCompOpAssignInverted : GCompOpAssign; 
-    bitmap_layer_set_compositing_mode(phone_layer, mode);
-    bl_enabled = light_is_on();
+    light_enable_interaction();
   }
 
   #elif defined(PBL_PLATFORM_EMERY)
@@ -248,10 +244,6 @@ static void start_toy_phone(void) {
     play_count++;
   }
  
-  #if defined(PBL_PLATFORM_FLINT)
-  light_enable(false);
-  #endif
-
   cancel_timers();
   stop_callback(NULL);
   
