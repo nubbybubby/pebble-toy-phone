@@ -145,12 +145,14 @@ static void stop_callback(void *data) {
   bitmap_layer_set_compositing_mode(phone_layer, GCompOpAssign);
   #endif
 
-  if (play_count > 1 && remaining == 0) {
-    light_enable(false);
+  if (remaining == 0) {
+    if (play_count > 1) {
+      light_enable(false);
+    }
+    speaker_stream_close();
   }
 
   s_stop_timer = NULL;
-  speaker_stream_close();
   speaker_stop();
 }
 
