@@ -35,9 +35,14 @@ static bool third_click;
 static bool bl_toggle;
 #endif
 
+static const uint32_t pcms[2] = {
+  RESOURCE_ID_PCM_DATA_PART1,
+  RESOURCE_ID_PCM_DATA_PART2
+};
+
 // Resource playback state
-static ResHandle s_res_handle;
-static size_t s_res_size;
+static ResHandle s_res_handle[sizeof(pcms)];
+static size_t s_res_size[sizeof(pcms)];
 static size_t s_res_offset;
 
 // Sample buffer
@@ -45,11 +50,6 @@ static uint8_t s_buffer[SAMPLES_PER_CHUNK];
 
 static uint8_t volume;
 static uint8_t play_count;
-
-typedef enum {
-  PART_1 = RESOURCE_ID_PCM_DATA_PART1,
-  PART_2 = RESOURCE_ID_PCM_DATA_PART2
-} PCM_DATA;
 
 static const uint32_t segments[] = {
     400, 
@@ -111,7 +111,8 @@ static void light_show_callback(void *data);
 
 static bool fill_stream(void) {
   for (;;) {
-    remaining = s_res_size - s_res_offset;
+    remaining = s_res_size[play_count - 1] - s_res_offset;
+    
     if (remaining == 0) {
       return true;
     }
@@ -123,8 +124,8 @@ static bool fill_stream(void) {
     }
 
     size_t to_read = (remaining < BYTES_PER_CHUNK) ? remaining : BYTES_PER_CHUNK;
-    resource_load_byte_range(s_res_handle, s_res_offset, s_buffer, to_read);
-    
+    resource_load_byte_range(s_res_handle[play_count - 1], s_res_offset, s_buffer, to_read);
+            
     uint32_t written = speaker_stream_write(s_buffer, to_read);
     s_res_offset += written;
 
@@ -254,11 +255,6 @@ static void start_toy_phone(void) {
   
   s_res_offset = 0;
  
-  PCM_DATA pcm_data_handle;
-
-  s_res_handle = resource_get_handle(pcm_data_handle = play_count);
-  s_res_size = resource_size(s_res_handle);
-
   if (!s_vibrate_timer && !third_click) {
     s_vibrate_timer = app_timer_register(50, vibrate_callback, NULL);
   }
@@ -269,11 +265,6 @@ static void start_toy_phone(void) {
     }
     bl_enabled = light_is_on();
     bl_fallback = !light_is_on();
-  }
-
-  if (s_res_size == 0) {
-    APP_LOG(APP_LOG_LEVEL_ERROR, "toy phone pcm resource is empty");
-    return;
   }
 
   if (!speaker_stream_open(SpeakerPcmFormat_8kHz_8bit, 0)) {
@@ -334,7 +325,18 @@ static void prv_init(void) {
   } else {
     volume = MAX_VOLUME;
   }
-  
+ 
+  int pcm_count = sizeof(pcms) / sizeof(pcms[0]);
+
+  for (int i = 0; i < pcm_count; i++) {
+    s_res_handle[i] = resource_get_handle(pcms[i]);
+    s_res_size[i] = resource_size(s_res_handle[i]);
+
+    if (s_res_size[i] == 0) {
+      APP_LOG(APP_LOG_LEVEL_ERROR, "toy phone pcm part %d resource is empty", i);
+    }
+  }
+
   const bool animated = true;
   window_stack_push(s_window, animated);
 }
