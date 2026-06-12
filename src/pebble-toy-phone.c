@@ -231,7 +231,7 @@ static void cancel_timers(void) {
 }
 
 static void start_toy_phone(void) {
-  if (play_count == 2 && remaining > 61000 && !third_click) {
+  if (play_count == 2 && remaining > 62000 && !third_click) {
     third_click = true;
   } else {
     third_click = false;
