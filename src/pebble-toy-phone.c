@@ -1,11 +1,11 @@
 #include <pebble.h>
 
 // Audio constants — must match the raw PCM file format
-// Expected format: 8-bit signed mono at 8kHz
-#define SAMPLE_RATE 8000
+// Expected format: 8-bit signed mono at 16kHz
+#define SAMPLE_RATE 16000
 #define TIMER_MS 50
-#define SAMPLES_PER_CHUNK (SAMPLE_RATE * TIMER_MS / 1000) // 400
-#define BYTES_PER_CHUNK (SAMPLES_PER_CHUNK * 1)            // 400
+#define SAMPLES_PER_CHUNK (SAMPLE_RATE * TIMER_MS / 1000) // 800
+#define BYTES_PER_CHUNK (SAMPLES_PER_CHUNK * 1)           // 800
 
 #if defined(PBL_PLATFORM_FLINT)
 #define MIN_VOLUME 65
@@ -114,7 +114,7 @@ static bool fill_stream(void) {
       return true;
     }
 
-    if (remaining < 61000 && play_count == 2) {
+    if (remaining < 132000 && play_count == 2) {
       if (!s_light_show_timer) {
         light_show_callback(NULL);
       }
@@ -231,7 +231,7 @@ static void cancel_timers(void) {
 }
 
 static void start_toy_phone(void) {
-  if (play_count == 2 && remaining > 62000 && !third_click) {
+  if (play_count == 2 && remaining > 124000 && !third_click) {
     third_click = true;
   } else {
     third_click = false;
@@ -252,12 +252,12 @@ static void start_toy_phone(void) {
   
   if (play_count == 2) {
     if (third_click) {
-      s_res_offset = 20000; //jump to ay ay ay im your little butterfly
+      s_res_offset = 40000; //jump to ay ay ay im your little butterfly
     }
     bl_enabled = light_is_on();
   }
 
-  if (!speaker_stream_open(SpeakerPcmFormat_8kHz_8bit, 0)) {
+  if (!speaker_stream_open(SpeakerPcmFormat_16kHz_8bit, 0)) {
     APP_LOG(APP_LOG_LEVEL_ERROR, "Failed to open speaker stream");
     return;
   }
