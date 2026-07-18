@@ -1,12 +1,12 @@
 {
   "name": "Chinese Toy Phone",
   "author": "nubbybubby",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "keywords": ["pebble-app"],
   "private": true,
   "dependencies": {},
   "pebble": {
-    "displayName": "Toy Phone",
+    "displayName": "Chinese Toy Phone",
     "uuid": "2e950f43-b1a1-401a-a107-621f03e5fd07",
     "sdkVersion": "3",
     "enableMultiJS": true,
