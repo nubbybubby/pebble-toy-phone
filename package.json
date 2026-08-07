@@ -1,7 +1,7 @@
 {
   "name": "Chinese Toy Phone",
   "author": "nubbybubby",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "keywords": ["pebble-app"],
   "private": true,
   "dependencies": {},
