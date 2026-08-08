@@ -17,6 +17,8 @@
 #define MAX_VOLUME 40
 #endif
 
+static WatchInfoVersion fw;
+
 static Window *s_window;
 
 static BitmapLayer *phone_layer;
@@ -84,8 +86,6 @@ static bool emery_430_or_greater(void) {
   return false;
 
   #elif defined(PBL_PLATFORM_EMERY)
-
-  WatchInfoVersion fw = watch_info_get_firmware_version();
 
   if (fw.major >= 4 && fw.minor >= 30) {
     return true;
@@ -333,6 +333,8 @@ static void prv_init(void) {
   s_window = window_create();
   window_set_click_config_provider(s_window, prv_click_config_provider);
   
+  fw = watch_info_get_firmware_version();
+
   #if defined(PBL_TOUCH)
   if (touch_service_is_enabled()) {
     touch_service_subscribe(touch_handler, NULL);
