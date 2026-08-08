@@ -10,16 +10,12 @@
 #define VOLUME_STEP 5
 
 #if defined(PBL_PLATFORM_FLINT)
-#define MIN_VOLUME_FLINT 65
-#define MAX_VOLUME_FLINT 95
+#define MIN_VOLUME 60
+#define MAX_VOLUME 95
 #elif defined(PBL_PLATFORM_EMERY)
-#define MIN_VOLUME_EMERY 5
-#define MAX_VOLUME_EMERY 40
+#define MIN_VOLUME 5
+#define MAX_VOLUME 40
 #endif
-
-static uint8_t min_volume;
-static uint8_t max_volume;
-static uint8_t volume_step;
 
 static Window *s_window;
 
@@ -82,6 +78,24 @@ static void touch_handler(const TouchEvent *event, void *context) {
 }
 #endif
 
+static bool emery_430_or_greater(void) {
+  #if defined(PBL_PLATFORM_FLINT)
+
+  return false;
+
+  #elif defined(PBL_PLATFORM_EMERY)
+
+  WatchInfoVersion fw = watch_info_get_firmware_version();
+
+  if (fw.major >= 4 && fw.minor >= 30) {
+    return true;
+  }
+
+  return false;
+
+  #endif
+}
+
 static void prv_select_click_handler(ClickRecognizerRef recognizer, void *context) {
   start_toy_phone();
 }
@@ -90,24 +104,24 @@ static void prv_up_click_handler(ClickRecognizerRef recognizer, void *context) {
   if (!bl_enabled) {
     bl_enabled = light_is_on();
   }
-  if (volume >= max_volume) {
-    volume = max_volume;
+  if (volume >= MAX_VOLUME) {
+    volume = MAX_VOLUME;
     return;
   }
-  volume = volume + volume_step;
-  speaker_set_volume(volume);
+  volume = volume + VOLUME_STEP;
+  speaker_set_volume(emery_430_or_greater() ? (volume * 2) : volume);
 }
 
 static void prv_down_click_handler(ClickRecognizerRef recognizer, void *context) {
   if (!bl_enabled) {
     bl_enabled = light_is_on();
   }
-  if (volume <= min_volume) {
-    volume = min_volume;
+  if (volume <= MIN_VOLUME) {
+    volume = MIN_VOLUME;
     return;
   }
-  volume = volume - volume_step;
-  speaker_set_volume(volume);
+  volume = volume - VOLUME_STEP;
+  speaker_set_volume(emery_430_or_greater() ? (volume * 2) : volume);
 }
 
 static void prv_click_config_provider(void *context) {
@@ -269,10 +283,10 @@ static void start_toy_phone(void) {
     bl_enabled = light_is_on();
   }
 
-  if (volume > max_volume) {
-    volume = max_volume;
-  } else if (volume < min_volume) {
-    volume = min_volume;
+  if (volume > MAX_VOLUME) {
+    volume = MAX_VOLUME;
+  } else if (volume < MIN_VOLUME) {
+    volume = MIN_VOLUME;
   }
 
   if (!speaker_stream_open(SpeakerPcmFormat_16kHz_8bit, 0)) {
@@ -280,7 +294,7 @@ static void start_toy_phone(void) {
     return;
   }
 
-  speaker_set_volume(volume);
+  speaker_set_volume(emery_430_or_greater() ? (volume * 2) : volume);
 
   s_playing = true;
   fill_stream();
@@ -324,26 +338,7 @@ static void prv_init(void) {
     touch_service_subscribe(touch_handler, NULL);
   }
   #endif
-  
-  volume_step = VOLUME_STEP;
-
-  #if defined(PBL_PLATFORM_FLINT)
-  min_volume = MIN_VOLUME_FLINT;
-  max_volume = MAX_VOLUME_FLINT;
-  #elif defined(PBL_PLATFORM_EMERY)
-  WatchInfoVersion fw = watch_info_get_firmware_version();
-
-  if (fw.major >= 4 && fw.minor >= 30) {
-    volume_step = VOLUME_STEP * 2;
-    min_volume = MIN_VOLUME_EMERY * 2;
-    max_volume = MAX_VOLUME_EMERY * 2;
-  } else {
-    min_volume = MIN_VOLUME_EMERY;
-    max_volume = MAX_VOLUME_EMERY;
-  }
-
-  #endif
-
+   
   window_set_window_handlers(s_window, (WindowHandlers) {
     .load = prv_window_load,
     .unload = prv_window_unload,
@@ -352,7 +347,7 @@ static void prv_init(void) {
   if (persist_exists(1)) {
     volume = persist_read_int(1);
   } else {
-    volume = max_volume;
+    volume = MAX_VOLUME;
   }
  
   int pcm_count = sizeof(pcms) / sizeof(pcms[0]);
