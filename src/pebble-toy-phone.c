@@ -8,6 +8,7 @@
 #define BYTES_PER_CHUNK (SAMPLES_PER_CHUNK * 1)           // 800
 
 #define VOLUME_STEP 5
+#define CHORUS_TIMESTAMP 131000
 
 #if defined(PBL_PLATFORM_FLINT)
 #define MIN_VOLUME 60
@@ -33,6 +34,7 @@ static size_t remaining;
 static bool s_playing;
 static bool bl_enabled;
 static bool third_click;
+static float speed;
 
 #if defined(PBL_PLATFORM_FLINT)
 static bool bl_toggle;
@@ -136,11 +138,11 @@ static bool fill_stream(void) {
   for (;;) {
     remaining = s_res_size[play_count - 1] - s_res_offset;
     
-    if (remaining == 0) {
+    if (remaining <= 2) {
       return true;
     }
 
-    if (remaining < 131000 && play_count == 2) {
+    if (remaining < CHORUS_TIMESTAMP && play_count == 2) {
       if (!s_light_show_timer) {
         light_show_callback(NULL);
       }
@@ -150,11 +152,11 @@ static bool fill_stream(void) {
     resource_load_byte_range(s_res_handle[play_count - 1], s_res_offset, s_buffer, to_read);
             
     uint32_t written = speaker_stream_write(s_buffer, to_read);
-    s_res_offset += written;
+    s_res_offset += written * speed;
 
     if (written < to_read) {
       return false;
-    } 
+    }
   }
 }
 
@@ -226,7 +228,7 @@ static void light_show_callback(void *data) {
 
   #endif
 
-  s_light_show_timer = app_timer_register(200, light_show_callback, NULL);
+  s_light_show_timer = app_timer_register(200 / speed, light_show_callback, NULL);
 }
 
 static void vibrate_callback(void *data) {
@@ -257,7 +259,7 @@ static void cancel_timers(void) {
 }
 
 static void start_toy_phone(void) {
-  if (play_count == 2 && remaining > 132000 && !third_click) {
+  if (play_count == 2 && remaining > CHORUS_TIMESTAMP + 1000 && !third_click) {
     third_click = true;
   } else {
     third_click = false;
@@ -266,7 +268,15 @@ static void start_toy_phone(void) {
     }
     play_count++;
   }
- 
+
+  BatteryChargeState state = battery_state_service_peek();
+
+  if (state.charge_percent > 11 || state.is_charging) {
+    speed = 1.0;
+  } else {
+    speed = (float)state.charge_percent / 10;
+  }
+
   cancel_timers();
   stop_callback(NULL);
   
