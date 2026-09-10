@@ -232,7 +232,7 @@ static void light_show_callback(void *data) {
 }
 
 static void vibrate_callback(void *data) {
-  if (third_click) return;
+  if (third_click || speed != 1.0) return;
   vibes_enqueue_custom_pattern(pat);
 }
 
