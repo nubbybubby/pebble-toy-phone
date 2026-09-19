@@ -271,7 +271,7 @@ static void start_toy_phone(void) {
 
   BatteryChargeState state = battery_state_service_peek();
 
-  if (state.charge_percent > 11 || state.is_charging) {
+  if (state.charge_percent >= 11 || state.is_charging) {
     speed = 1.0;
   } else {
     speed = (float)state.charge_percent / 10;
